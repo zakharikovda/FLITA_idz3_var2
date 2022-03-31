@@ -1,46 +1,59 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <ctype.h>
 
-int main() {
-    int matrix[5][19];
-    int i, j;
-    int r;
-    FILE *in = fopen("input.txt", "r");
-    if (!in)
-        exit(EXIT_FAILURE);
-    for (i = 0; i < 5 && !feof(in); i++) {
-        for (j = 0; j < 19 && !feof(in); j++) {
-            fscanf(in, "%d", &matrix[i][j]);
-            printf("%d ", matrix[i][j]);
-        }
-        putchar('\n');
+int main(void) {
+  FILE * matrix = fopen("input.txt", "r");
+
+  if (matrix == NULL) {
+    printf("error");
+    return 1;
+  }
+  
+  int c;
+  int lineIndex = 0;
+  int width = 0;
+  int height = 0;
+  int A[5][19];
+
+  while((c = fgetc(matrix)) != EOF) {
+    if (c == '\n') {
+      if (!height) 
+      width = lineIndex;
+      lineIndex = 0;
+      ++height;
+    } else if (isdigit(c)) {
+      A[height][lineIndex++] = c;
     }
-    fclose(in);
+  }
+  ++height;
+  
+  int x[2] = {-1, -1}; //предыдущий столбец
+  int y[2] = {-1, -1}; //текущий столбец
+  int elementIndex = 0;
+  int EdgeNumber = 0;
 
-
-
-    FILE *out;
-    out = fopen("output.dot", "w");
-    fprintf(out, "graph{\n");
-    for (int i = 0; i < 5; i++) {
-        for (int j = i; j < 19; j++) {
-            if (matrix[i][j] == 1)
-            fprintf(out, "\t%d -- %d\n", i, j);
-            r++;
-        }
+  for (int i = 0; i != width; ++i) {
+    for (int j = 0; j != height; ++j) {
+      if (A[j][i] == '1') {
+        y[elementIndex++] = j;
+      }
     }
-    fprintf(out, "}\n");
-    fclose(out);
-
-
-
-    if(r > (( j - 1 )*( j - 2 )/ 2)){
-        printf("Linked");
-    }else{
-        printf("Unrelated");
+    elementIndex = 0;
+    if ((y[0] != x[0] || 
+         y[1] != x[1]) && 
+         y[0] != -1 && y[1] != -1) {
+      ++EdgeNumber;
     }
-
-
-    system("dot output.dot -Tpng -o image.png");
-    return (EXIT_SUCCESS);
+    for (int k = 0; k != 2; ++k) {
+      x[k] = y[k];
+      y[k] = -1;
+    }
+  }
+  if (EdgeNumber > (height - 1)*(height - 2)/2)
+    printf("yes\n");
+  else
+    printf("no\n");
+  return 0;
 }
+
+

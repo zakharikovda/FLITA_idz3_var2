@@ -1,59 +1,71 @@
 #include <stdio.h>
-#include <ctype.h>
+#include <stdlib.h>
 
-int main(void) {
-  FILE * matrix = fopen("input.txt", "r");
+int main()
+{
+    int matrix[5][19];
+    int i, j;
+    int edges =0; //ребро
+    int height = 0;
+    FILE *file = fopen("input.txt", "r");
+    if (!file)
+        exit(EXIT_FAILURE);
+    for (i = 0; i < 5 && !feof(file); i++)
+    {
+        for (j = 0; j < 17 && !feof(file); j++)
+        {
+            fscanf(file, "%d", &matrix[i][j]);
+            printf("%d ", matrix[i][j]);
+        }
+        putchar('\n');
+    }
+    fclose(file);
+    FILE *out;
+    out = fopen("output.dot", "w");
+    fprintf(out, "graph{\n");
+    int n=-1, r=-1;
+    for(int j = 0; j<5; j++){
+        height++;
+        fprintf(out, "\t%d\n", j);
+    }
+    for (int i = 0; i < 17; i++)
+    {
+        for (int j = 4; j >= 0; j--)
+        {
 
-  if (matrix == NULL) {
-    printf("error");
-    return 1;
-  }
-  
-  int c;
-  int lineIndex = 0;
-  int width = 0;
-  int height = 0;
-  int A[5][19];
+            if (matrix[j][i] == 1 && n==-1)
+            {
+                n=j;
+            }
+            if (matrix[j][i] == 1 && r==-1 && n!=j){
+                r=j;
+            }
+        }
+        
+        if(matrix[n][i+1] == 1 && matrix[r][i+1] == 1){
+            continue;
+        }
 
-  while((c = fgetc(matrix)) != EOF) {
-    if (c == '\n') {
-      if (!height) 
-      width = lineIndex;
-      lineIndex = 0;
-      ++height;
-    } else if (isdigit(c)) {
-      A[height][lineIndex++] = c;
+        if(r!=-1 && n!=-1){
+            edges++;
+            fprintf(out, "\t%d -- %d\n", n, r);
+        }
+        n=-1;
+        r=-1;
+    
     }
-  }
-  ++height;
-  
-  int x[2] = {-1, -1}; //предыдущий столбец
-  int y[2] = {-1, -1}; //текущий столбец
-  int elementIndex = 0;
-  int EdgeNumber = 0;
+    fprintf(out, "}\n");
+    fclose(out);
+    printf("%d\n", edges);
+    printf("%d\n", height);
 
-  for (int i = 0; i != width; ++i) {
-    for (int j = 0; j != height; ++j) {
-      if (A[j][i] == '1') {
-        y[elementIndex++] = j;
-      }
+    
+
+    if(edges >= (height-1)*(height-2)/2){
+        printf("yes\n");
+    }else{
+        printf("no\n");
     }
-    elementIndex = 0;
-    if ((y[0] != x[0] || 
-         y[1] != x[1]) && 
-         y[0] != -1 && y[1] != -1) {
-      ++EdgeNumber;
-    }
-    for (int k = 0; k != 2; ++k) {
-      x[k] = y[k];
-      y[k] = -1;
-    }
-  }
-  if (EdgeNumber > (height - 1)*(height - 2)/2)
-    printf("yes\n");
-  else
-    printf("no\n");
-  return 0;
+    system("dot output.dot -Tpng -o image.png");
+    return (EXIT_SUCCESS);
 }
-
-
